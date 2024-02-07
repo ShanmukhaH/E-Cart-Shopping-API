@@ -9,5 +9,7 @@ import com.ecommerce.ekart.utility.ResponseStrcture;
 public interface AuthService {
 
 	ResponseEntity<ResponseStrcture<UserResponse>> registerUser(UserRequest userrequest);
+	
+	 void cleanupnonVerfiedUser();
 
 }

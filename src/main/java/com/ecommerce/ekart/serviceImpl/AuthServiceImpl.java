@@ -1,5 +1,6 @@
 package com.ecommerce.ekart.serviceImpl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -80,20 +81,32 @@ public class AuthServiceImpl implements AuthService {
 	public ResponseEntity<ResponseStrcture<UserResponse>> registerUser(UserRequest userrequest) {
 
 
-User user = userRepoistory.findByusername(userrequest.getEmail().split("@")[0]).map(user1->{
-			
+		User user = userRepoistory.findByusername(userrequest.getEmail().split("@")[0]).map(user1->{
+
 			if(user1.isEmailVerfied()) throw new UserAlreadyExistByEmailException("User Already Present");
-			
+
 			else {
 				// Send otp to email
 				// under maintance
 			}
 			return user1;
 		}).orElseGet(()->saveUser(userrequest));
-		
+
 		return new  ResponseEntity<ResponseStrcture<UserResponse>>(strcture.setStatus(HttpStatus.OK.value())
 				.setMessage("User registred Successfully,Please Varify your email by OTP")
 				.setData(mapToUserResponse(user)),HttpStatus.OK);
+	}
+
+	@Override
+	public void cleanupnonVerfiedUser() {
+
+		List<User> list = userRepoistory.findByIsEmailVerfiedFalse();
+
+		if(!list.isEmpty())
+		{
+			list.forEach(user->userRepoistory.delete(user));
+		}
+
 	}
 
 }
