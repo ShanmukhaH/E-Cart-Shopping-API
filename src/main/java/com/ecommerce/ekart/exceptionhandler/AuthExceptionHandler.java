@@ -1,4 +1,4 @@
-package com.ecommerce.ekart.utility;
+package com.ecommerce.ekart.exceptionhandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,15 +12,16 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.ecommerce.ekart.exception.DataAlreadyPresentException;
+import com.ecommerce.ekart.exception.InvalidOTPException;
+import com.ecommerce.ekart.exception.OTPExcpiredException;
 import com.ecommerce.ekart.exception.UserAlreadyExistByEmailException;
+import com.ecommerce.ekart.exception.UserSessionExpiredException;
 
-@RestControllerAdvice
-public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
+public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 
 	private ResponseEntity<Object> structure(HttpStatus status,String message,Object rootcause){
 		return new ResponseEntity<Object>(Map.of(
@@ -29,7 +30,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 				"rootcause",rootcause),status
 				);
 	}
-
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
@@ -45,7 +45,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
 		return structure(HttpStatus.BAD_REQUEST, "Failed to Save the data", errors);
 	}
-
 	@ExceptionHandler(DataAlreadyPresentException.class)
 	public ResponseEntity<Object> handleDataAlradyPresentException(DataAlreadyPresentException ex){
 		return structure(HttpStatus.FOUND, ex.getMessage(), "Data Alrady Present");
@@ -55,5 +54,19 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 	public ResponseEntity<Object> handleUserAlreadyPresent(UserAlreadyExistByEmailException ex){
 		return structure(HttpStatus.FOUND, ex.getMessage(), "User ALready pResent");
 	}
-
+	
+	@ExceptionHandler(OTPExcpiredException.class)
+	public ResponseEntity<Object> handleOTPExpiredException(OTPExcpiredException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "OTP is Expired");
+	}
+	
+	@ExceptionHandler(UserSessionExpiredException.class)
+	public ResponseEntity<Object> handelUserSessionExpiredException(UserSessionExpiredException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "User Session Expired");
+	}
+	
+	@ExceptionHandler(InvalidOTPException.class)
+	public ResponseEntity<Object> handleInvalidOtpException(InvalidOTPException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "Invalid Otp");
+	}
 }
