@@ -13,6 +13,6 @@ public interface UserRepoistory extends JpaRepository<User, Integer>{
    
 	Optional<User>findByusername(String username);
 	
-	  List<User> findByIsEmailVerfiedFalse();
+	List<User> findByIsEmailVerfiedFalse();
 
 }
