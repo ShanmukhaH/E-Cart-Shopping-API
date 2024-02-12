@@ -3,6 +3,7 @@ package com.ecommerce.ekart.serviceImpl;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -151,6 +152,16 @@ public class AuthServiceImpl implements AuthService {
 			list.forEach(user->userRepoistory.delete(user));
 		}
 
+	}
+	
+	@Override
+	public void cleanupExpiredTokens() {
+		
+		List<AccessToken> acessToken = accessTokenRepoistory.findAllByExpirationBefore(LocalDateTime.now());
+		accessTokenRepoistory.deleteAll();
+		
+		List<RefreshToken> refreshToken = refreshTokenRepoistory.findAllByExpirationBefore(LocalDateTime.now());
+		refreshTokenRepoistory.deleteAll();
 	}
 
 	@Override
@@ -342,7 +353,6 @@ public class AuthServiceImpl implements AuthService {
 	
 
 	
-
 	
 }
 
