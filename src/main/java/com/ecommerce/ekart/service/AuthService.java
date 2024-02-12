@@ -2,10 +2,16 @@ package com.ecommerce.ekart.service;
 
 import org.springframework.http.ResponseEntity;
 
+import com.ecommerce.ekart.requestdto.AuthRequest;
 import com.ecommerce.ekart.requestdto.OtpModel;
 import com.ecommerce.ekart.requestdto.UserRequest;
+import com.ecommerce.ekart.responsedto.AuthResponse;
 import com.ecommerce.ekart.responsedto.UserResponse;
 import com.ecommerce.ekart.utility.ResponseStrcture;
+import com.ecommerce.ekart.utility.SimpleResponseStrcture;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
 
@@ -15,4 +21,9 @@ public interface AuthService {
 
 	ResponseEntity<ResponseStrcture<UserResponse>> verfiyOTP(OtpModel otpModel);
 
+	ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response);
+
+	ResponseEntity<SimpleResponseStrcture<AuthResponse>> logout(String refreshToken,String accesstoken,HttpServletResponse response);
+
+	
 }
