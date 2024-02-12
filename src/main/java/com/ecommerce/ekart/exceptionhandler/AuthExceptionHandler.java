@@ -16,6 +16,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.ecommerce.ekart.exception.DataAlreadyPresentException;
+import com.ecommerce.ekart.exception.IllegalRequestException;
 import com.ecommerce.ekart.exception.InvalidAuthenticationException;
 import com.ecommerce.ekart.exception.InvalidOTPException;
 import com.ecommerce.ekart.exception.OTPExcpiredException;
@@ -74,11 +75,17 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	
 	@ExceptionHandler(UserNotLoggedInException.class)
 	ResponseEntity<Object> handleUserNotLoogedInException(UserNotLoggedInException ex){
-		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "Plese Login");
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "illigal Request");
 	}
 	
 	@ExceptionHandler(InvalidAuthenticationException.class)
 	ResponseEntity<Object> handleAuthenticationFailedException(InvalidAuthenticationException ex){
 		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "Failed TO Authenticate");
+	}
+	
+	@ExceptionHandler(IllegalRequestException.class)
+	ResponseEntity<Object> handleIllegalRequestException(IllegalRequestException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "illegal Request");
+		
 	}
 }
