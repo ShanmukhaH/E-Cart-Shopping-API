@@ -19,6 +19,7 @@ import com.ecommerce.ekart.exception.DataAlreadyPresentException;
 import com.ecommerce.ekart.exception.InvalidOTPException;
 import com.ecommerce.ekart.exception.OTPExcpiredException;
 import com.ecommerce.ekart.exception.UserAlreadyExistByEmailException;
+import com.ecommerce.ekart.exception.UserNotLoggedInException;
 import com.ecommerce.ekart.exception.UserSessionExpiredException;
 
 public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
@@ -68,5 +69,10 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(InvalidOTPException.class)
 	public ResponseEntity<Object> handleInvalidOtpException(InvalidOTPException ex){
 		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "Invalid Otp");
+	}
+	
+	@ExceptionHandler(UserNotLoggedInException.class)
+	ResponseEntity<Object> handleUserNotLoogedInException(UserNotLoggedInException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "Plese Login");
 	}
 }
