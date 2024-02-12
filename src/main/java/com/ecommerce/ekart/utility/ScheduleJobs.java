@@ -18,8 +18,13 @@ public class ScheduleJobs {
 		authService.cleanupnonVerfiedUser();
 	}
 	
-	@Scheduled(fixedDelay = 2000l*60*8)
-	public void cleanupExpiredTokens() {
-		authService.cleanupExpiredTokens();
+	@Scheduled(fixedDelay = 1000l*60*10)
+	public void cleanupExpiredRefershTokens() {
+		authService.cleanupExpiredRefreshTokens();
+	}
+	
+	@Scheduled(fixedDelay = 1000l*60*10)
+	public void cleanupExpiredAcessTokens() {
+		authService.cleanupExpiredAccessTokens();;
 	}
 }

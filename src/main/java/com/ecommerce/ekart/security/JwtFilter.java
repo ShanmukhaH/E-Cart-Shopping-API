@@ -29,40 +29,40 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtFilter extends OncePerRequestFilter {
 
 	private AccessTokenRepoistory accessTokenRepoistory;
-	
+
 	private JwtService jwtService;
-	
+
 	private CustomUserDetailService customUserDetailService;
-	
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-	
+
 		String at=null;
 		String rt=null;
 		Cookie[] cookies = request.getCookies();
-		for(Cookie cookie:cookies) {
-			
-			if(cookie.getName().equals("at")) at=cookie.getValue();
-			if(cookie.getName().equals("rt")) rt=cookie.getValue();
-		}
-		String username=null;
-		if(at==null || rt==null) throw new UserNotLoggedInException("User Not Logged in");
-		Optional<AccessToken> accessToken = accessTokenRepoistory.findByTokenAndIsblocked(at,false);
-		if(accessToken==null) throw new RuntimeException();
-		else
-		{    log.error("Authenticating the token.......");
-			 username = jwtService.extractUsername(at);
-			if(username==null) throw new InvalidAuthenticationException("Failed to Authenticate");
-			UserDetails userDetails = customUserDetailService.loadUserByUsername(username);
-			UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, null,userDetails.getAuthorities());
-			token.setDetails(new WebAuthenticationDetails(request));
-			SecurityContextHolder.getContext().setAuthentication(token);
-			log.info("Authenticated SUcesfully");
+		if(cookies!=null) {
+			for(Cookie cookie:cookies) {
+
+				if(cookie.getName().equals("at")) at=cookie.getValue();
+				if(cookie.getName().equals("rt")) rt=cookie.getValue();
+			}
+			String username=null;
+			if(at!=null && rt!=null) {
+				Optional<AccessToken> accessToken = accessTokenRepoistory.findByTokenAndIsblocked(at,false);
+				if(accessToken==null) throw new RuntimeException("AcessToken Not Found");
+				else
+				{    log.error("Authenticating the token.......");
+				username = jwtService.extractUsername(at);
+				if(username==null) throw new InvalidAuthenticationException("Failed to Authenticate");
+				UserDetails userDetails = customUserDetailService.loadUserByUsername(username);
+				UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, null,userDetails.getAuthorities());
+				token.setDetails(new WebAuthenticationDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(token);
+				log.info("Authenticated SUcesfully");
+				}
+			}
 		}
 		filterChain.doFilter(request, response);
-		
 	}
-	
-
 }

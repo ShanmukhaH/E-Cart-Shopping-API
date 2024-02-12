@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -60,48 +61,48 @@ public class AuthServiceImpl implements AuthService {
 
 
 	private SellerRepoistory sellerRepoistory;
-	
+
 	private CustomerRepoistory customerRepoistory;
-	
+
 	private UserRepoistory userRepoistory;
-	
+
 	private ResponseStrcture<UserResponse> strcture;
-	
+
 	private ResponseStrcture<AuthResponse> authstrcture;
-	
-	private SimpleResponseStrcture<AuthResponse> sauthStrcture;
-	
+
+//	private SimpleResponseStrcture<AuthResponse> sauthStrcture;
+
 	private PasswordEncoder encoder;
-	
+
 	private CacheStore<String> otpcachestore;
-	
+
 	private CacheStore<User>  usercacheStore;
-	
+
 	private JavaMailSender javaMailSender;
-	
+
 	private AuthenticationManager authenticationManager;
-	
+
 	private CookieManager cookieManager;
-	
+
 	private JwtService jwtService;
-	
+
 	private AccessTokenRepoistory accessTokenRepoistory;
-	
+
 	private RefreshTokenRepoistory refreshTokenRepoistory;
-	
+
 	@Value("${myapp.access.expiry}")
 	private int acessExpiryInSeconds;
-	
+
 	@Value("${myapp.refresh.expiry}")
 	private int refreshExpiryInSeconds;
-	
+
 
 	public AuthServiceImpl(SellerRepoistory sellerRepoistory, CustomerRepoistory customerRepoistory,
 			UserRepoistory userRepoistory, ResponseStrcture<UserResponse> strcture,
 			ResponseStrcture<AuthResponse> authstrcture, PasswordEncoder encoder, CacheStore<String> otpcachestore,
 			CacheStore<User> usercacheStore, JavaMailSender javaMailSender, AuthenticationManager authenticationManager,
 			CookieManager cookieManager, JwtService jwtService, AccessTokenRepoistory accessTokenRepoistory,
-			RefreshTokenRepoistory refreshTokenRepoistory,SimpleResponseStrcture<AuthResponse> sauthStrcture) {
+			RefreshTokenRepoistory refreshTokenRepoistory) {
 		super();
 		this.sellerRepoistory = sellerRepoistory;
 		this.customerRepoistory = customerRepoistory;
@@ -117,8 +118,8 @@ public class AuthServiceImpl implements AuthService {
 		this.jwtService = jwtService;
 		this.accessTokenRepoistory = accessTokenRepoistory;
 		this.refreshTokenRepoistory = refreshTokenRepoistory;
-		this.sauthStrcture=sauthStrcture;
-		
+//		this.sauthStrcture=sauthStrcture;
+
 	}
 
 	@Override
@@ -131,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
 		User user=mapToUser(userrequest);
 		usercacheStore.add(userrequest.getEmail(), user);
 		otpcachestore.add(userrequest.getEmail(), OTP);
-		
+
 		try {
 			sendOtpToMail(user, OTP);
 		} catch (MessagingException ex) {
@@ -153,16 +154,23 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 	}
-	
+
+
 	@Override
-	public void cleanupExpiredTokens() {
-		
-		List<AccessToken> acessToken = accessTokenRepoistory.findAllByExpirationBefore(LocalDateTime.now());
-		accessTokenRepoistory.deleteAll();
-		
+	public void cleanupExpiredRefreshTokens() {
+
 		List<RefreshToken> refreshToken = refreshTokenRepoistory.findAllByExpirationBefore(LocalDateTime.now());
 		refreshTokenRepoistory.deleteAll();
 	}
+
+	@Override
+	public void cleanupExpiredAccessTokens() {
+		List<AccessToken> acessToken = accessTokenRepoistory.findAllByExpirationBefore(LocalDateTime.now());
+		accessTokenRepoistory.deleteAll();
+
+	}
+
+
 
 	@Override
 	public ResponseEntity<ResponseStrcture<UserResponse>> verfiyOTP(@RequestBody OtpModel otpModel) {
@@ -175,21 +183,21 @@ public class AuthServiceImpl implements AuthService {
 
 		user.setEmailVerfied(true);
 		userRepoistory.save(user);
-		
+
 		try {
 			sendRegistrationSucessMail(user);
 		} catch (MessagingException e) {
 			log.error("Connection Failed");
 		}
-		
+
 		return new ResponseEntity<ResponseStrcture<UserResponse>>(strcture.setStatus(HttpStatus.OK.value())
 				.setMessage("Verfied OTp SUcessfully")
 				.setData(mapToUserResponse(user)),HttpStatus.OK);
 	}
-	
+
 	@Override
 	public ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response) {
-		
+
 		String username=authRequest.getEmail().split("@")[0];
 		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,authRequest.getPassword());
 		Authentication authenticate = authenticationManager.authenticate(token);
@@ -197,26 +205,26 @@ public class AuthServiceImpl implements AuthService {
 			throw new UsernameNotFoundException("Failed TO authenticate User");
 		else 
 			//Generating the cookies and AuthResponse and returning to the client.
-		return userRepoistory.findByusername(username).map(user ->{
-			grantAcess(response, user);
-			return ResponseEntity.ok(authstrcture.setStatus(HttpStatus.OK.value())
-					.setData(AuthResponse.builder()
-							.userId(user.getUserId())
-							.username(username)
-							.role(user.getUserRole().name())
-							.isAuthenticated(true)
-							.accessExpiraion(LocalDateTime.now().plusSeconds(acessExpiryInSeconds))
-							.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
-							.build())
-					.setMessage(""));
-		}).get();
+			return userRepoistory.findByusername(username).map(user ->{
+				grantAcess(response, user);
+				return ResponseEntity.ok(authstrcture.setStatus(HttpStatus.OK.value())
+						.setData(AuthResponse.builder()
+								.userId(user.getUserId())
+								.username(username)
+								.role(user.getUserRole().name())
+								.isAuthenticated(true)
+								.accessExpiraion(LocalDateTime.now().plusSeconds(acessExpiryInSeconds))
+								.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
+								.build())
+						.setMessage(""));
+			}).get();
 	}
-	
-	
+
+
 	@Override
-	public ResponseEntity<SimpleResponseStrcture<AuthResponse>> logout( String refreshToken, String accesstoken,HttpServletResponse response) {
-		
-		
+	public ResponseEntity<SimpleResponseStrcture> logout( String refreshToken, String accesstoken,HttpServletResponse response) {
+
+
 		if(accesstoken==null&&refreshToken==null) {
 			throw new UserNotLoggedInException("Please Login");
 		}
@@ -230,35 +238,73 @@ public class AuthServiceImpl implements AuthService {
 		});
 		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
 		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
-		
-       sauthStrcture.setStatus(HttpStatus.OK.value());
-       sauthStrcture.setMessage("Logout Sucesfully!!!");
-       return new ResponseEntity<SimpleResponseStrcture<AuthResponse>>(sauthStrcture,HttpStatus.OK);
-		
+
+		SimpleResponseStrcture strcture=new SimpleResponseStrcture();
+		strcture.setStatus(HttpStatus.OK.value());
+		strcture.setMessage("Logout Sucesfully!!!");
+		return new ResponseEntity<SimpleResponseStrcture>(strcture,HttpStatus.OK);
+
 	}
-	
-	
+
+
+	@Override
+	public ResponseEntity<SimpleResponseStrcture> revokeOther(String accessToken, String refreshToken,
+			HttpServletResponse httpServletResponse) {
+		
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(username!=null) {
+			userRepoistory.findByusername(username)
+			.ifPresent(user->{
+				blockedAcessTokens(accessTokenRepoistory.findAllByUserAndIsblockedAndTokenNot(user, false, accessToken));
+				blockedRefreshTokens(refreshTokenRepoistory.findAllByUserAndIsblockedAndTokenNot(user, false, refreshToken));
+			});
+			
+			SimpleResponseStrcture strcture=new SimpleResponseStrcture();
+			strcture.setStatus(HttpStatus.OK.value());
+			strcture.setMessage("Logged out from all other device");
+			return new ResponseEntity<SimpleResponseStrcture>(strcture,HttpStatus.OK);
+		}
+		 throw new IllegalArgumentException("User Not Authenticated") ;
+	}
+
+
+	private void blockedAcessTokens(List<AccessToken> acessTokens) {
+		acessTokens.forEach(at->{
+			at.setIsblocked(true);
+			accessTokenRepoistory.save(at);
+		});
+	}
+
+	private void blockedRefreshTokens(List<RefreshToken> refreshTokens) {
+		refreshTokens.forEach(rt->{
+			rt.setIsblocked(true);
+			refreshTokenRepoistory.save(rt);
+		});
+	}
+
+
+
 	private void grantAcess(HttpServletResponse response,User user) {
 		//generating access and refresh tokens
-	    String accessToken = jwtService.generateAccessToken(user.getUsername());
-	    String refreshToken = jwtService.generaterefreshToken(user.getUsername());
-	    
-	    //adding access and refresh tokens cookies to the response
-	    response.addCookie(cookieManager.configure(new Cookie("at", refreshToken),acessExpiryInSeconds));
-	    response.addCookie(cookieManager.configure(new Cookie("rt", refreshToken),refreshExpiryInSeconds));
-	    
-	    //saving the access and refresh cookie into database
-	    accessTokenRepoistory.save(AccessToken.builder()
-	    		.token(accessToken)
-	    		.isblocked(false)
-	    		.expiration(LocalDateTime.now().plusSeconds(acessExpiryInSeconds))
-	    		.build());
-	    
-	    refreshTokenRepoistory.save(RefreshToken.builder()
-	    		.token(refreshToken)
-	    		.isblocked(false)
-	    		.expiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
-	    		.build());
+		String accessToken = jwtService.generateAccessToken(user.getUsername());
+		String refreshToken = jwtService.generaterefreshToken(user.getUsername());
+
+		//adding access and refresh tokens cookies to the response
+		response.addCookie(cookieManager.configure(new Cookie("at", refreshToken),acessExpiryInSeconds));
+		response.addCookie(cookieManager.configure(new Cookie("rt", refreshToken),refreshExpiryInSeconds));
+
+		//saving the access and refresh cookie into database
+		accessTokenRepoistory.save(AccessToken.builder()
+				.token(accessToken)
+				.isblocked(false)
+				.expiration(LocalDateTime.now().plusSeconds(acessExpiryInSeconds))
+				.build());
+
+		refreshTokenRepoistory.save(RefreshToken.builder()
+				.token(refreshToken)
+				.isblocked(false)
+				.expiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
+				.build());
 	}
 
 	@Async
@@ -272,7 +318,7 @@ public class AuthServiceImpl implements AuthService {
 
 	}
 	private void sendOtpToMail(User user,String Otp) throws MessagingException {
-		
+
 		sendMail(MessageStructure.builder()
 				.to(user.getEmail())
 				.subject("Complte Your Registation To Ekart ")
@@ -286,11 +332,11 @@ public class AuthServiceImpl implements AuthService {
 						+"with best regards <br>"
 						+"E-kart")
 				.build());
-		
+
 	}
-	
+
 	private void sendRegistrationSucessMail(User user) throws MessagingException {
-		
+
 		sendMail(MessageStructure.builder()
 				.to(user.getEmail())
 				.subject("Registration Sucessfull-Ekart")
@@ -350,9 +396,11 @@ public class AuthServiceImpl implements AuthService {
 		return user;
 	}
 
-	
 
-	
-	
+
+
+
+
+
 }
 

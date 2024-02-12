@@ -8,20 +8,20 @@ import lombok.NoArgsConstructor;
 @Component
 @AllArgsConstructor
 @NoArgsConstructor
-public class SimpleResponseStrcture<T> {
+public class SimpleResponseStrcture {
 
 
 	private int status;
 	private String message;
 	
-	public SimpleResponseStrcture<T> setStatus(int status) {
+	public SimpleResponseStrcture setStatus(int status) {
 		this.status = status;
 		return this;
 	}
 	public String getMessage() {
 		return message;
 	}
-	public SimpleResponseStrcture<T> setMessage(String message) {
+	public SimpleResponseStrcture  setMessage(String message) {
 		this.message = message;
 		return this;
 	}

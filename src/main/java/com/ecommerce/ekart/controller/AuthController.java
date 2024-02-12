@@ -44,8 +44,13 @@ public class AuthController {
 	
 
 	@PostMapping("/logout")
-	public ResponseEntity<SimpleResponseStrcture<AuthResponse>> logout(@CookieValue(name="rt", required=false) String refreshToken,@CookieValue(name = "at",required = false) String accesstoken,HttpServletResponse response){
+	public ResponseEntity<SimpleResponseStrcture> logout(@CookieValue(name="rt", required=false) String refreshToken,@CookieValue(name = "at",required = false) String accesstoken,HttpServletResponse response){
 	return authService.logout(refreshToken,accesstoken,response);	
+	}
+	
+	@PostMapping("/refresh-other-devices")
+	public ResponseEntity<SimpleResponseStrcture> revokeOther(@CookieValue(name = "at",required = false)String accessToken,@CookieValue(name="rt",required = false)String refreshToken ,HttpServletResponse httpServletResponse){
+		return authService.revokeOther(accessToken,refreshToken,httpServletResponse);
 	}
 	
 	
