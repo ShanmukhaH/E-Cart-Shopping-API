@@ -267,6 +267,26 @@ public class AuthServiceImpl implements AuthService {
 		 throw new IllegalArgumentException("User Not Authenticated") ;
 	}
 
+	@Override
+	public ResponseEntity<SimpleResponseStrcture> revokeAll(String accessToken, String refreshToken,
+			HttpServletResponse httpServletResponse) {
+		
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		if(username!=null) {
+			userRepoistory.findByusername(username)
+			.ifPresent(user->{
+				blockedAcessTokens(accessTokenRepoistory.findAllByUserAndIsblocked(user, false));
+				blockedRefreshTokens(refreshTokenRepoistory.findAllByUserAndIsblocked(user, false));
+			});
+			
+			SimpleResponseStrcture strcture=new SimpleResponseStrcture();
+			strcture.setStatus(HttpStatus.OK.value());
+			strcture.setMessage("Logged out from all other device");
+			return new ResponseEntity<SimpleResponseStrcture>(strcture,HttpStatus.OK);
+		}
+		 throw new IllegalArgumentException("User Not Authenticated") ;
+			
+	}
 
 	private void blockedAcessTokens(List<AccessToken> acessTokens) {
 		acessTokens.forEach(at->{
@@ -395,10 +415,6 @@ public class AuthServiceImpl implements AuthService {
 		}
 		return user;
 	}
-
-
-
-
 
 
 
