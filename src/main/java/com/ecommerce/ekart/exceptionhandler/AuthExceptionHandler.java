@@ -21,6 +21,7 @@ import com.ecommerce.ekart.exception.InvalidAuthenticationException;
 import com.ecommerce.ekart.exception.InvalidOTPException;
 import com.ecommerce.ekart.exception.OTPExcpiredException;
 import com.ecommerce.ekart.exception.UserAlreadyExistByEmailException;
+import com.ecommerce.ekart.exception.UserAlreadyLoggedInException;
 import com.ecommerce.ekart.exception.UserNotLoggedInException;
 import com.ecommerce.ekart.exception.UserSessionExpiredException;
 
@@ -86,6 +87,9 @@ public class AuthExceptionHandler extends ResponseEntityExceptionHandler{
 	@ExceptionHandler(IllegalRequestException.class)
 	ResponseEntity<Object> handleIllegalRequestException(IllegalRequestException ex){
 		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "illegal Request");
-		
+	}
+	
+	ResponseEntity<Object> handleUseralreadyLoginException(UserAlreadyLoggedInException ex){
+		return structure(HttpStatus.BAD_REQUEST, ex.getMessage(), "User alrady login");
 	}
 }

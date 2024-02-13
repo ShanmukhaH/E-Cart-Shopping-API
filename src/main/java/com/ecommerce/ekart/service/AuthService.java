@@ -21,7 +21,7 @@ public interface AuthService {
 
 	ResponseEntity<ResponseStrcture<UserResponse>> verfiyOTP(OtpModel otpModel);
 
-	ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response);
+	ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response,String accessToken, String refreshToken);
 
 	ResponseEntity<SimpleResponseStrcture> logout(String refreshToken,String accesstoken,HttpServletResponse response);
 	
@@ -33,6 +33,9 @@ public interface AuthService {
 
 	ResponseEntity<SimpleResponseStrcture> revokeAll(String accessToken, String refreshToken,
 			HttpServletResponse httpServletResponse);
+
+	ResponseEntity<SimpleResponseStrcture> refreshLogin(String accessToken, String refreshToken,
+			HttpServletResponse response);
 
 	
 }
