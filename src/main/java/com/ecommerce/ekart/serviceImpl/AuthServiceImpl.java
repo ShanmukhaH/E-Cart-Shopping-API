@@ -30,6 +30,7 @@ import com.ecommerce.ekart.entity.User;
 import com.ecommerce.ekart.exception.InvalidOTPException;
 import com.ecommerce.ekart.exception.OTPExcpiredException;
 import com.ecommerce.ekart.exception.UserAlreadyExistByEmailException;
+import com.ecommerce.ekart.exception.UserAlreadyLoggedInException;
 import com.ecommerce.ekart.exception.UserNotLoggedInException;
 import com.ecommerce.ekart.exception.UserSessionExpiredException;
 import com.ecommerce.ekart.repoistory.AccessTokenRepoistory;
@@ -196,8 +197,10 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response) {
+	public ResponseEntity<ResponseStrcture<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response,String accessToken, String refreshToken) {
 
+		if(accessToken==null && refreshToken==null) {
+		
 		String username=authRequest.getEmail().split("@")[0];
 		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,authRequest.getPassword());
 		Authentication authenticate = authenticationManager.authenticate(token);
@@ -216,10 +219,12 @@ public class AuthServiceImpl implements AuthService {
 								.accessExpiraion(LocalDateTime.now().plusSeconds(acessExpiryInSeconds))
 								.refreshExpiration(LocalDateTime.now().plusSeconds(refreshExpiryInSeconds))
 								.build())
-						.setMessage(""));
+						.setMessage("Login Sucessfully!!!!"));
 			}).get();
-	}
+	}else 
+		throw new UserAlreadyLoggedInException("User is Already Login ");
 
+	}
 
 	@Override
 	public ResponseEntity<SimpleResponseStrcture> logout( String refreshToken, String accesstoken,HttpServletResponse response) {
@@ -287,6 +292,35 @@ public class AuthServiceImpl implements AuthService {
 		 throw new IllegalArgumentException("User Not Authenticated") ;
 			
 	}
+	
+	@Override
+	public ResponseEntity<SimpleResponseStrcture> refreshLogin(String accessToken, String refreshToken,
+			HttpServletResponse response) {
+		
+		if(accessToken!=null) {
+		  accessTokenRepoistory.findByToken(accessToken).ifPresent(at->{
+			  at.setIsblocked(true);
+			  accessTokenRepoistory.save(at);
+		  });
+		}
+		if(refreshToken!=null) {
+			refreshTokenRepoistory.findByToken(refreshToken).ifPresent(rt->{
+				rt.setIsblocked(true);
+				refreshTokenRepoistory.save(rt);
+			});
+		
+		User user = userRepoistory.findByusername(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(()-> new UsernameNotFoundException("User not Found by name"));
+		grantAcess(response, user);
+		
+		SimpleResponseStrcture strcture=new SimpleResponseStrcture();
+		strcture.setStatus(HttpStatus.OK.value());
+		strcture.setMessage("Token refreshed Sucessfully");
+		return new ResponseEntity<SimpleResponseStrcture>(strcture,HttpStatus.OK);
+		}
+		else
+			throw new UserNotLoggedInException("Please Login");
+	}
+
 
 	private void blockedAcessTokens(List<AccessToken> acessTokens) {
 		acessTokens.forEach(at->{
@@ -416,7 +450,6 @@ public class AuthServiceImpl implements AuthService {
 		return user;
 	}
 
-
-
+	
 }
 

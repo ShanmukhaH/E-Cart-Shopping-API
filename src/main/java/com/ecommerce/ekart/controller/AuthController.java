@@ -38,8 +38,8 @@ public class AuthController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<ResponseStrcture<AuthResponse>> login(@RequestBody AuthRequest authRequest,HttpServletResponse response){
-		return authService.login(authRequest,response);
+	public ResponseEntity<ResponseStrcture<AuthResponse>> login(@RequestBody AuthRequest authRequest,HttpServletResponse response,@CookieValue(name="rt", required=false) String refreshToken,@CookieValue(name = "at",required = false) String accesstoken){
+		return authService.login(authRequest,response,accesstoken,refreshToken);
 	}
 	
 
@@ -48,7 +48,7 @@ public class AuthController {
 	return authService.logout(refreshToken,accesstoken,response);	
 	}
 	
-	@PostMapping("/refresh-other-devices")
+	@PostMapping("/revoke-other-devices")
 	public ResponseEntity<SimpleResponseStrcture> revokeOther(@CookieValue(name = "at",required = false)String accessToken,@CookieValue(name="rt",required = false)String refreshToken ,HttpServletResponse httpServletResponse){
 		return authService.revokeOther(accessToken,refreshToken,httpServletResponse);
 	}
@@ -56,6 +56,11 @@ public class AuthController {
 	@PostMapping("/revoke-all-devices")
 	public ResponseEntity<SimpleResponseStrcture> revokeAll(@CookieValue(name = "at",required = false)String accessToken,@CookieValue(name="rt",required = false)String refreshToken ,HttpServletResponse httpServletResponse){
 		return authService.revokeAll(accessToken,refreshToken,httpServletResponse);
+	}
+	
+	@PostMapping("/refresh-token")
+	public ResponseEntity<SimpleResponseStrcture> refreshLogin(@CookieValue(name = "at",required = false) String accessToken,@CookieValue(name = "rt",required = false) String refreshToken, HttpServletResponse response){
+		return authService.refreshLogin(accessToken, refreshToken,response);
 	}
 	
 	
